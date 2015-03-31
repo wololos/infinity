@@ -35,6 +35,11 @@ $pages = array(
 	'/edit_news'				=> 'secure_POST news',		// view news
 	'/edit_news/(\d+)'			=> 'secure_POST news',		// view news
 	'/edit_news/delete/(\d+)'		=> 'secure news_delete',	// delete from news
+
+	'/edit_pages(?:/?(\%b)?)'		=> 'secure_POST pages',
+	'/edit_page/(\d+)'			=> 'secure_POST edit_page',
+	'/edit_pages/delete/([a-z0-9]+)'	=> 'secure delete_page',
+	'/edit_pages/delete/([a-z0-9]+)/(\%b)'	=> 'secure delete_page_board',
 	
 	'/noticeboard'				=> 'secure_POST noticeboard',	// view noticeboard
 	'/noticeboard/(\d+)'			=> 'secure_POST noticeboard',	// view noticeboard
@@ -51,7 +56,7 @@ $pages = array(
 	// Important to note that (?:global) will make no argument.
 	// (global)? will make argument 0 either "global" or "".
 	'/reports(?:/)?'                                                          => 'reports',               // report queue
-	'/reports/(global)?(?:/)?'                                                => 'reports',               // global report queue
+	'/reports/(global)?(?:/)?(json)?'                                         => 'reports',               // global report queue
 	'/reports/(global)?(?:/)?(content)/(\%b)/(\d+)(?:/)?'                     => 'reports',               // specific reported content (also historic)
 	'/reports/(global)?(?:/)?(content)/(\%b)/(\d+)/dismiss(?:/)?'             => 'secure report_dismiss', // dismiss all reports on content
 	'/reports/(global)?(?:/)?(content)/(\%b)/(\d+)/demote(?:/)?'              => 'secure report_demote',  // demote all reports on content
@@ -135,6 +140,8 @@ foreach ($pages as $key => $callback) {
 	$new_pages[@$key[0] == '!' ? $key : '!^' . $key . '(?:&[^&=]+=[^&]*)*$!u'] = $callback;
 }
 $pages = $new_pages;
+
+$parse_start_time = microtime(true);
 
 foreach ($pages as $uri => $handler) {
 	if (preg_match($uri, $query, $matches)) {

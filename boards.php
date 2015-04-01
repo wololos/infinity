@@ -87,7 +87,7 @@ foreach ($boards as $i => &$board) {
 		@eval($board_config);
 	}
 	$showboard = $board['indexed'];
-	$locale = isset($boardCONFIG['locale'])?$boardCONFIG['locale']:'en';
+	$locale = isset($boardCONFIG['locale'])?$boardCONFIG['locale']:'pl_PL.UTF-8';
 
 	$board['title'] = utf8tohtml($board['title']);
 	$locale_arr = explode('_', $locale);

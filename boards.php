@@ -133,8 +133,8 @@ if ($admin) {
 	foreach ($boards as $i => &$b) { unset($b['img']); }
 	file_write("boards.json", json_encode($boards));
 	file_write("tags.json", json_encode($all_tags));
-	foreach ($boards as $i => $b) {
-		if (in_array($b['uri'], $config['no_top_bar_boards'])) {
+	foreach ($boards as $i => $bo) {
+		if (in_array($bo['uri'], $config['no_top_bar_boards'])) {
 			unset($boards[$i]);
 		}
 		unset($boards[$i]['img']);

@@ -473,6 +473,8 @@
 
 	// Maximum post body length.
 	$config['max_body'] = 1800;
+	// Maximum number of newlines. (0 for unlimited)
+	$config['max_newlines'] = 0;
 	// Maximum number of post body lines to show on the index page.
 	$config['body_truncate'] = 15;
 	// Maximum number of characters to show on the index page.
@@ -1272,6 +1274,8 @@
 	$config['mod']['link_bumpunlock'] = '[-Sage]';
 	$config['mod']['link_editpost'] = '[Edit]';
 	$config['mod']['link_move'] = '[Move]';
+	$config['mod']['link_cycle'] = '[Cycle]';
+	$config['mod']['link_uncycle'] = '[-Cycle]';
 
 	// Moderator capcodes.
 	$config['capcode'] = ' <span class="capcode">## %s</span>';
@@ -1415,6 +1419,9 @@
 	$config['mod']['deletebyip_global'] = ADMIN;
 	// Sticky a thread
 	$config['mod']['sticky'] = MOD;
+	// Cycle a thread
+	$config['mod']['cycle'] = MOD;
+	$config['cycle_limit'] = &$config['reply_limit'];
 	// Lock a thread
 	$config['mod']['lock'] = MOD;
 	// Post in a locked thread

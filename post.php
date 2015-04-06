@@ -315,7 +315,7 @@ elseif (isset($_POST['post'])) {
 	
 	//Check if thread exists
 	if (!$post['op']) {
-		$query = prepare(sprintf("SELECT `sticky`,`locked`,`sage` FROM ``posts_%s`` WHERE `id` = :id AND `thread` IS NULL LIMIT 1", $board['uri']));
+		$query = prepare(sprintf("SELECT `sticky`,`locked`,`cycle`,`sage` FROM ``posts_%s`` WHERE `id` = :id AND `thread` IS NULL LIMIT 1", $board['uri']));
 		$query->bindValue(':id', $post['thread'], PDO::PARAM_INT);
 		$query->execute() or error(db_error());
 		
@@ -579,11 +579,19 @@ elseif (isset($_POST['post'])) {
 	if (!$mod && mb_strlen($post['body']) > $config['max_body'])
 		error($config['error']['toolong_body']);
 	if (mb_strlen($post['body']) < $config['min_body'] && $post['op'])
-		error(_(sprintf('OP must be at least %d chars on this board.', $config['min_body'])));
+		error(sprintf(_('OP must be at least %d chars on this board.'), $config['min_body']));
 	if (mb_strlen($post['password']) > 20)
 		error(sprintf($config['error']['toolong'], 'password'));
 		
 	wordfilters($post['body']);
+
+	if ($config['max_newlines'] > 0) {
+		preg_match_all("/\n/", $post['body'], $nlmatches);
+	
+		if (isset($nlmatches[0]) && sizeof($nlmatches[0]) > $config['max_newlines'])
+			error(sprintf(_('Your post contains too many lines. This board only allows %d maximum.'), $config['max_newlines']));
+	}
+	
 	
 	$post['body'] = escape_markup_modifiers($post['body']);
 	
@@ -905,6 +913,19 @@ elseif (isset($_POST['post'])) {
 	$post['id'] = $id = post($post);
 	
 	insertFloodPost($post);
+
+	// Handle cyclical threads
+	if (!$post['op'] && isset($thread['cycle']) && $thread['cycle']) {
+		// Query is a bit weird due to "This version of MariaDB doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'" (MariaDB Ver 15.1 Distrib 10.0.17-MariaDB, for Linux (x86_64))
+		$query = prepare(sprintf('SELECT `id` FROM ``posts_%s`` WHERE `thread` = :thread AND `id` NOT IN (SELECT `id` FROM (SELECT `id` FROM ``posts_%s`` WHERE `thread` = :thread ORDER BY `id` DESC LIMIT :limit) i)', $board['uri'], $board['uri']));
+		$query->bindValue(':thread', $post['thread']);
+		$query->bindValue(':limit', $config['cycle_limit'], PDO::PARAM_INT);
+		$query->execute() or error(db_error($query));
+
+		while ($dpost = $query->fetch()) {
+			deletePost($dpost['id'], false, false);
+		}
+	}
 	
 	if (isset($post['antispam_hash'])) {
 		incrementSpamHash($post['antispam_hash']);
@@ -920,7 +941,7 @@ elseif (isset($_POST['post'])) {
 		query('INSERT INTO ``cites`` VALUES ' . implode(', ', $insert_rows)) or error(db_error());
 	}
 	
-	if (!$post['op'] && !isset($_POST['no-bump']) && strtolower($post['email']) != 'sage' && !$thread['sage'] && ($config['reply_limit'] == 0 || $numposts['replies']+1 < $config['reply_limit'])) {
+	if (!$post['op'] && !isset($_POST['no-bump']) && strtolower($post['email']) != 'sage' && !$thread['sage'] && ($thread['cycle'] || $config['reply_limit'] == 0 || $numposts['replies']+1 < $config['reply_limit'])) {
 		bumpThread($post['thread']);
 	}
 	

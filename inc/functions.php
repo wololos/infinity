@@ -32,7 +32,7 @@ loadConfig();
 
 function init_locale($locale, $error='error') {
 	if ($locale === 'en') 
-		$locale = 'en_US.utf8';
+		$locale = 'en_US.UTF-8';
 
 	if (extension_loaded('gettext')) {
 		setlocale(LC_ALL, $locale); 
